@@ -1,4 +1,5 @@
 import { ConfigEnv, UserConfig, loadEnv } from 'vite'
+import type { ProxyOptions } from 'vite';
 import { resolve } from 'path';
 import dayjs from "dayjs";
 import vue from '@vitejs/plugin-vue';
@@ -21,8 +22,39 @@ const __APP_INFO__ = {
   lastBuildTime: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss")
 };
 
+/**
+ * 多服务器地址
+ * @param list
+ */
+type ProxyItem = [string, string];
+
+type ProxyList = ProxyItem[];
+
+type ProxyTargetList = Record<string, ProxyOptions>;
+const httpsRE = /^https:\/\//;
+
+export function createProxy(list: ProxyList = []) {
+  const mapProxy: any = new Map(list);
+  const ret: ProxyTargetList = {};
+  for (const [key, value] of mapProxy.entries()) {
+    const isHttps = httpsRE.test(value);
+    ret[key] = {
+      ws: true,
+      // 服务器地址
+      target: value,
+      // 是否允许跨域
+      changeOrigin: true,
+      // 请求的 URL 进行重写:如 /api/user/login 等同于 /user/login
+      rewrite: (path) => path.replace(new RegExp(`^${key}`), ''),
+      // https is require secure=false
+      ...(isHttps ? { secure: false } : {}),
+    };
+  }
+  return ret;
+}
+
 export default ({ mode }: ConfigEnv): UserConfig => {
-  const { VITE_APP_BASE } = loadEnv(mode, CWD)
+  const { VITE_APP_BASE, VITE_APP_HOST } = loadEnv(mode, CWD);
   return {
     // 目录
     base: VITE_APP_BASE,
@@ -73,16 +105,7 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       // 端口号
       port: 9090,
       host: "localhost",
-      proxy: {
-        "/api": {
-          // 服务器地址
-          target: "",
-          // 是否允许跨域
-          changeOrigin: true,
-          // 请求的 URL 进行重写:如 /api/user/login 等同于 /user/login
-          rewrite: (path) => path.replace(/^\/api/, ""),
-        }
-      }
+      proxy: createProxy(JSON.parse(VITE_APP_HOST)),
     },
     build: {
       // 打包es版本
