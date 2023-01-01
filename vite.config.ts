@@ -6,6 +6,7 @@ import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import vueJsx from "@vitejs/plugin-vue-jsx";
 import svgLoader from "vite-svg-loader";
+import DefineOptions from 'unplugin-vue-define-options/vite'
 // vite-plugin-compression 开启gzip压缩
 import viteCompression from 'vite-plugin-compression';
 // unplugin-vue-components 按需导入组件
@@ -79,6 +80,7 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       legacy({
         targets: ['defaults', 'not IE 11'],
       }),
+      DefineOptions(),
       // svg组件化支持
       svgLoader(),
       // Jsx 配置
@@ -99,6 +101,15 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       //   ],
       // }),
     ],
+    css: {
+      preprocessorOptions: {
+        less: {
+          // modifyVars 全局 less 变量
+          modifyVars: "",
+          javascriptEnabled: true,
+        },
+      },
+    },
     server: {
       // 是否开启 https
       https: false,
@@ -107,11 +118,13 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       host: "localhost",
       proxy: createProxy(JSON.parse(VITE_APP_HOST)),
     },
+
     build: {
       // 打包es版本
       target: "es2015",
       // css 最低版本
       cssTarget: "chrome61",
+      minify: "terser",
       terserOptions: {
         // 打包后移除console和注释
         compress: {
