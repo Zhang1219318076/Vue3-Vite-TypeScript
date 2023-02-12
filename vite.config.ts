@@ -7,7 +7,7 @@ import legacy from '@vitejs/plugin-legacy';
 import vueJsx from "@vitejs/plugin-vue-jsx";
 import svgLoader from "vite-svg-loader";
 import DefineOptions from 'unplugin-vue-define-options/vite'
-// vite-plugin-compression 开启gzip压缩
+// vite-plugin-compression 开启gzip | brotli 压缩
 import viteCompression from 'vite-plugin-compression';
 // unplugin-vue-components 按需导入组件
 /* import ViteComponents, { ElementPlusResolver } from 'unplugin-vue-components'; */
@@ -55,7 +55,7 @@ export function createProxy(list: ProxyList = []) {
 }
 
 export default ({ mode }: ConfigEnv): UserConfig => {
-  const { VITE_APP_BASE, VITE_APP_HOST } = loadEnv(mode, CWD);
+  const { VITE_APP_BASE, VITE_APP_HOST, VITE_OUT_DIR } = loadEnv(mode, CWD);
   return {
     // 目录
     base: VITE_APP_BASE,
@@ -138,8 +138,10 @@ export default ({ mode }: ConfigEnv): UserConfig => {
           chunkFileNames: "static/js/[name]-[hash].js",
           entryFileNames: "static/js/[name]-[hash].js",
           assetFileNames: "static/[ext]/[name]-[hash].[ext]"
-        }
-      }
+        },
+      },
+      // 输出打包目录名称默认 dist
+      outDir: VITE_OUT_DIR,
     },
     define: {
       __INTLIFY_PROD_DEVTOOLS__: false,
